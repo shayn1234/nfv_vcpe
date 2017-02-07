@@ -15,7 +15,7 @@ inputs:
   openstack_controller_queue_id:
     description: Controller Queue for OpenStack
     type: string
-    default: 'cloudify.gC8AtYEJmd'
+    default: 'cloudify.OeODxzjGjS'
 
   use_existing_openstack_external_network:
     type: boolean
@@ -148,6 +148,7 @@ node_templates:
         flavor: { get_input: flavor_id }
       cloudify_agent:
         user: { get_input: agent_user }
+        key: { get_input: openstack_key_file}
     relationships:
       - target: vpn_floating_ip
         type: cloudify.openstack.server_connected_to_floating_ip
@@ -189,11 +190,11 @@ node_templates:
 #  Components
 #
 
-  tunnel:
-    type: labs.networking.sshtunnel
-    relationships:
-      - target: generic_vnf
-        type: cloudify.relationships.contained_in
+#  tunnel:
+#    type: labs.networking.sshtunnel
+#    relationships:
+#      - target: generic_vnf
+#        type: cloudify.relationships.contained_in
 
 
   vpn:
@@ -201,8 +202,8 @@ node_templates:
     relationships:
       - target: generic_vnf
         type: cloudify.relationships.contained_in
-      - target: tunnel
-        type: cloudify.relationships.connected_to
+#      - target: tunnel
+#        type: cloudify.relationships.connected_to
 
   filter:
     type: cloudify.nodes.ApplicationModule
