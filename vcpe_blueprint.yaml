@@ -108,6 +108,9 @@ node_templates:
 
   vpn_floating_ip:
     type: cloudify.openstack.nodes.FloatingIP
+    properties:
+      floatingip:
+        floating_network_name: { get_input: openstack_external_network_name }
     relationships:
       - target: openstack_controller
         type: cloudify.relationships.connected_to
