@@ -13,9 +13,9 @@ inputs:
 
 
   openstack_controller_queue_id:
-      description: Controller Queue for OpenStack
-      type: string
-      default: 'cloudify.gC8AtYEJmd'
+    description: Controller Queue for OpenStack
+    type: string
+    default: 'cloudify.gC8AtYEJmd'
 
   use_existing_openstack_external_network:
     type: boolean
@@ -33,89 +33,62 @@ inputs:
     type: string
     default: 'controller-network-name'
 
-  use_existing_openstack_group:
-    type: boolean
-    default: true
-
   openstack_group_name:
     default: 'controller-group'
 
   use_existing_openstack_network_subnet:
     type: boolean
     default: true
+
   openstack_network_subnet:
     type: string
     default: 'controller-network-subnet'
-  use_existing_openstack_network_router:
-    type: boolean
-    default: true
-  openstack_network_router_name:
-    type: string
-    default: 'controller-network-router'
+
   use_existing_openstack_network_port:
     type: boolean
     default: false
+
   openstack_network_port:
     type: string
     default: 'example-network-port'
-  use_existing_openstack_private_network:
-    type: boolean
-    default: true
-  openstack_private_network_name:
-    type: string
-    default: 'controller-private-network-name'
-  openstack_private_test_port_fixed_ip:
-    type: string
-    default: { get_input: openstack_private_network_subnet_gateway_ip }
-  use_existing_openstack_private_network_subnet:
-    type: boolean
-    default: true
-  openstack_private_network_subnet:
-    type: string
-    default: 'controller-private-network-subnet'
-  openstack_private_network_subnet_gateway_ip:
-    type: string
-    default: 192.168.121.252
-  use_existing_openstack_private_port:
-    type: boolean
-    default: false
-  openstack_private_network_port_name:
-    type: string
-    default: 'example-openstack-private-network-port'
-  use_existing_openstack_virtual_machine:
-    type: boolean
-    default: false
-  openstack_virtual_machine:
-    type: string
-    default: ''
-  openstack_virtual_machine_username:
-    type: string
-    default: centos
-  openstack_virtual_machine_image_id:
-    type: string
-    default: '9fe5fd57-0b81-4c40-bdd8-366dc7ecf0c0'
-  openstack_virtual_machine_flavor_id:
-    type: string
-    default: '8f4b7ae1-b8c2-431f-bb0c-362a5ece0381'
+
   use_existing_openstack_key:
     default: false
+
   openstack_key:
     default: openstack-key
+
   openstack_key_file:
     default: ~/.ssh/openstack-key.pem
-  use_existing_openstack_volume:
-    type: boolean
-    default: false
-  openstack_volume:
-    type: string
-    default: 'openstack-volume'
 
+
+  image_id:
+    type: string
+    default: '9fe5fd57-0b81-4c40-bdd8-366dc7ecf0c0'
+
+  flavor_id:
+    type: string
+    default: '8f4b7ae1-b8c2-431f-bb0c-362a5ece0381'
+
+  agent_user:
+    type: string
+    default: 'centos'
+
+  def_security_group_name:
+    type: string
+    default: 'controller-group'
+
+  filter_keyword:
+    type: string
+    default: 'gambling'
 
 node_templates:
+
   openstack_controller:
     type: cloudify.nodes.Controller
     properties:
       controller_queue: { get_input: openstack_controller_queue_id }
+
   openstack_external_network:
     type: cloudify.openstack.nodes.Network
     properties:
@@ -124,6 +97,7 @@ node_templates:
     relationships:
       - target: openstack_controller
         type: cloudify.relationships.connected_to
+
   openstack_network:
     type: cloudify.openstack.nodes.Network
     properties:
@@ -132,15 +106,7 @@ node_templates:
     relationships:
       - target: openstack_controller
         type: cloudify.relationships.connected_to
-  openstack_group:
-    type: cloudify.openstack.nodes.SecurityGroup
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_group }
-      resource_id: { get_input: openstack_group_name }
-      rules: { get_input: openstack_open_group_rules }
-    relationships:
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
+
   openstack_network_subnet:
     type: cloudify.openstack.nodes.Subnet
     properties:
@@ -153,74 +119,23 @@ node_templates:
         type: cloudify.openstack.subnet_connected_to_router
       - target: openstack_controller
         type: cloudify.relationships.connected_to
-  openstack_network_router:
-    type: cloudify.openstack.nodes.Router
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_network_router }
-      resource_id: { get_input: openstack_network_router_name }
-    relationships:
-      - target: openstack_external_network
-        type: cloudify.relationships.connected_to
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
-  openstack_network_port:
-    type: cloudify.openstack.nodes.Port
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_network_port }
-      resource_id: { get_input: openstack_network_port }
-      fixed_ip: { get_input: openstack_network_port_fixed_ip }
-    relationships:
-      - type: cloudify.relationships.contained_in
-        target: openstack_network
-      - type: cloudify.relationships.depends_on
-        target: openstack_network_subnet
-      - type: cloudify.openstack.port_connected_to_security_group
-        target: openstack_group
-      - type: cloudify.openstack.port_connected_to_floating_ip
-        target: openstack_floating_ip
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
-  openstack_floating_ip:
+
+  vpn_floating_ip:
     type: cloudify.openstack.nodes.FloatingIP
-    properties:
-      floatingip:
-        floating_network_name: { get_input: openstack_external_network_name }
     relationships:
       - target: openstack_controller
         type: cloudify.relationships.connected_to
-  openstack_private_network:
-    type: cloudify.openstack.nodes.Network
+
+  def_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
     properties:
-      use_external_resource: { get_input: use_existing_openstack_private_network }
-      resource_id: { get_input: openstack_private_network_name }
+      use_external_resource: True
+      security_group:
+        description: VCPE security security group
     relationships:
       - target: openstack_controller
         type: cloudify.relationships.connected_to
-  openstack_private_network_subnet:
-    type: cloudify.openstack.nodes.Subnet
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_private_network_subnet }
-      resource_id: { get_input: openstack_private_network_subnet }
-    relationships:
-      - target: openstack_private_network
-        type: cloudify.relationships.contained_in
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
-  openstack_private_network_port:
-    type: cloudify.openstack.nodes.Port
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_private_port }
-      resource_id: { get_input: openstack_private_network_port_name }
-      fixed_ip: { get_input: openstack_private_test_port_fixed_ip }
-    relationships:
-      - type: cloudify.relationships.contained_in
-        target: openstack_private_network
-      - type: cloudify.relationships.depends_on
-        target: openstack_private_network_subnet
-      - type: cloudify.openstack.port_connected_to_security_group
-        target: openstack_group
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
+
   openstack_key:
     type: cloudify.openstack.nodes.KeyPair
     properties:
@@ -230,73 +145,6 @@ node_templates:
     relationships:
       - target: openstack_controller
         type: cloudify.relationships.connected_to
-  openstack_volume:
-    type: cloudify.openstack.nodes.Volume
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_volume }
-      resource_id: { get_input: openstack_volume }
-    relationships:
-      - type: cloudify.openstack.volume_attached_to_server
-        target: openstack_virtual_machine
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
-  openstack_virtual_machine:
-    type: cloudify.openstack.nodes.Server
-    properties:
-      use_external_resource: { get_input: use_existing_openstack_virtual_machine }
-      resource_id: { get_input: openstack_virtual_machine }
-      install_agent: false
-      server:
-        image: { get_input: openstack_virtual_machine_image_id }
-        flavor: { get_input: openstack_virtual_machine_flavor_id }
-      management_network_name: { get_property: [ openstack_network, resource_id ] }
-    relationships:
-      - target: openstack_key
-        type: cloudify.openstack.server_connected_to_keypair
-      - target: openstack_network_port
-        type: cloudify.openstack.server_connected_to_port
-      - target: openstack_private_network_port
-        type: cloudify.openstack.server_connected_to_port
-      - target: openstack_controller
-        type: cloudify.relationships.connected_to
-
-
-  image_id:
-    type: string
-    default: 'aee5438f-1c7c-497f-a11e-53360241cf0f'
-
-  flavor_id:
-    type: string
-    default: '4d798e17-3439-42e1-ad22-fb956ec22b54'
-
-  agent_user:
-    type: string
-    default: 'centos'
-
-  def_security_group_name:
-    type: string
-    default: 'lab_sg'
-
-  filter_keyword:
-    type: string
-    default: 'gambling'
-
-node_templates:
-
-
-  vpn_floating_ip:
-    type: cloudify.openstack.nodes.FloatingIP
-
-  def_security_group:
-    type: cloudify.openstack.nodes.SecurityGroup
-    properties:
-      use_external_resource: False
-      security_group:
-        description: VCPE security security group
-      rules:
-        - port: 22
-          remote_ip_prefix: '0.0.0.0/0'
-
 
 #
 #  Infra.
@@ -315,6 +163,10 @@ node_templates:
         type: cloudify.openstack.server_connected_to_floating_ip
       - target: def_security_group
         type: cloudify.openstack.server_connected_to_security_group
+      - target: openstack_controller
+        type: cloudify.relationships.connected_to
+      - target: openstack_key
+        type: cloudify.openstack.server_connected_to_keypair
 
 #  filter_vfn:
 #    type: cloudify.openstack.nodes.Server
