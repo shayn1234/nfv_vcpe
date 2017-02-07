@@ -3,7 +3,7 @@ tosca_definitions_version: cloudify_dsl_1_3
 imports:
 
   - https://drive.google.com/uc?export=download&id=0BwJk-m4PjvavUjZXQWRHQkhxaGM
-  - http://www.getcloudify.org/spec/openstack-plugin/2.0/plugin.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.5/plugin.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
   - http://www.getcloudify.org/spec/fabric-plugin/1.4.2/plugin.yaml
   - types/labs.yaml
@@ -33,9 +33,6 @@ inputs:
     type: string
     default: 'controller-network-name'
 
-  openstack_group_name:
-    default: 'controller-group'
-
   use_existing_openstack_network_subnet:
     type: boolean
     default: true
@@ -44,23 +41,14 @@ inputs:
     type: string
     default: 'controller-network-subnet'
 
-  use_existing_openstack_network_port:
-    type: boolean
-    default: false
-
-  openstack_network_port:
-    type: string
-    default: 'example-network-port'
-
   use_existing_openstack_key:
     default: false
 
   openstack_key:
-    default: openstack-key
+    default: openstack-vcpe-key
 
   openstack_key_file:
-    default: ~/.ssh/openstack-key.pem
-
+    default: ~/.ssh/openstack-vcpe-key.pem
 
   image_id:
     type: string
@@ -115,8 +103,6 @@ node_templates:
     relationships:
       - target: openstack_network
         type: cloudify.relationships.contained_in
-      - target: openstack_network_router
-        type: cloudify.openstack.subnet_connected_to_router
       - target: openstack_controller
         type: cloudify.relationships.connected_to
 
@@ -130,6 +116,7 @@ node_templates:
     type: cloudify.openstack.nodes.SecurityGroup
     properties:
       use_external_resource: True
+      resource_id: { get_input: def_security_group_name }
       security_group:
         description: VCPE security security group
     relationships:
