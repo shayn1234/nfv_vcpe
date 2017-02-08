@@ -1,0 +1,22 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - https://drive.google.com/uc?export=download&id=0BwJk-m4PjvavUjZXQWRHQkhxaGM
+  - http://www.getcloudify.org/spec/openstack-plugin/1.5/plugin.yaml
+  - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.4.2/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-examples/cloudify-proxy-plugin/master/plugin.yaml
+
+  application_blueprint_id:
+      default: vcpe
+      type: string
+      description: Application blueprint ID
+
+
+node_templates:
+
+# Chain APP blueprint
+  app_deployment:
+      type: cloudify.nodes.BlueprintDeployment
+      properties:
+        blueprint_id: { get_input: application_blueprint_id }
