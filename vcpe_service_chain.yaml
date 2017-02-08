@@ -6,7 +6,7 @@ imports:
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
   - http://www.getcloudify.org/spec/fabric-plugin/1.4.2/plugin.yaml
   - https://raw.githubusercontent.com/cloudify-examples/cloudify-proxy-plugin/master/plugin.yaml
-#
+#####
   application_blueprint_id:
       default: vcpe
       type: string
