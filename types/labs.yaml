@@ -5,6 +5,14 @@ node_types:
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
-          implementation: scripts/tunnel_create.sh
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path:
+              default: scripts/tunnel_create.sh
+            fabric_env:
+              default:
+                host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
+                user: { get_input: agent_user }
+                key_filename: { get_input: openstack_key_file }
 #        configure:
 #          implementation: scripts/vpn_configure.sh

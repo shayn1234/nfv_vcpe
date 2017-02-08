@@ -48,7 +48,7 @@ inputs:
     default: openstack-vcpe-key
 
   openstack_key_file:
-    default: ~/.ssh/openstack-vcpe-key.pem
+    default: /root/openstack-vcpe-key.pem
 
   image_id:
     type: string
@@ -202,6 +202,8 @@ node_templates:
     relationships:
       - target: generic_vnf
         type: cloudify.relationships.contained_in
+      - target: openstack_controller
+        type: cloudify.relationships.connected_to
 #      - target: tunnel
 #        type: cloudify.relationships.connected_to
 
@@ -231,6 +233,8 @@ node_templates:
     relationships:
       - target: generic_vnf
         type: cloudify.relationships.contained_in
+      - target: openstack_controller
+        type: cloudify.relationships.connected_to
 
 
 
@@ -252,7 +256,5 @@ node_templates:
         type: cloudify.relationships.contained_in
       - target: vpn
         type: cloudify.relationships.connected_to
-
-
-
-
+      - target: openstack_controller
+        type: cloudify.relationships.connected_to

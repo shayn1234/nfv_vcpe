@@ -4,7 +4,23 @@ node_types:
     derived_from: cloudify.nodes.ApplicationModule
     interfaces:
       cloudify.interfaces.lifecycle:
-        create:
-          implementation: scripts/vpn_create.sh
+        start:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path:
+              default: scripts/vpn_create.sh
+            fabric_env:
+              default:
+                host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
+                user: { get_input: agent_user }
+                key_filename: { get_input: openstack_key_file }
         configure:
-          implementation: scripts/vpn_configure.sh
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path:
+              default: scripts/vpn_configure.sh
+            fabric_env:
+              default:
+                host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
+                user: { get_input: agent_user }
+                key_filename: { get_input: openstack_key_file }
