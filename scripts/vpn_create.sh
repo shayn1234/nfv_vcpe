@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sudo yum -y install epel-release
+yum -y install epel-release
 
-sudo yum -y install openvpn
+yum -y install openvpn
 

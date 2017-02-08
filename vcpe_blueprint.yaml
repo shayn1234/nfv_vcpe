@@ -15,7 +15,7 @@ inputs:
   openstack_controller_queue_id:
     description: Controller Queue for OpenStack
     type: string
-    default: 'cloudify.gC8AtYEJmd'
+    default: 'cloudify.OeODxzjGjS'
 
   use_existing_openstack_external_network:
     type: boolean
@@ -48,7 +48,7 @@ inputs:
     default: openstack-vcpe-key
 
   openstack_key_file:
-    default: ~/.ssh/openstack-vcpe-key.pem
+    default: /root/openstack-vcpe-key.pem
 
   image_id:
     type: string
@@ -143,11 +143,12 @@ node_templates:
   generic_vnf:
     type: cloudify.openstack.nodes.Server
     properties:
+      management_network_name: { get_input: openstack_network_name }
       server:
         image: { get_input: image_id }
         flavor: { get_input: flavor_id }
-      cloudify_agent:
-        user: { get_input: agent_user }
+      agent_config:
+        install_method: none
     relationships:
       - target: vpn_floating_ip
         type: cloudify.openstack.server_connected_to_floating_ip
@@ -189,11 +190,11 @@ node_templates:
 #  Components
 #
 
-  tunnel:
-    type: labs.networking.sshtunnel
-    relationships:
-      - target: generic_vnf
-        type: cloudify.relationships.contained_in
+#  tunnel:
+#    type: labs.networking.sshtunnel
+#    relationships:
+#      - target: generic_vnf
+#        type: cloudify.relationships.contained_in
 
 
   vpn:
@@ -201,25 +202,40 @@ node_templates:
     relationships:
       - target: generic_vnf
         type: cloudify.relationships.contained_in
-      - target: tunnel
+      - target: openstack_controller
         type: cloudify.relationships.connected_to
+#      - target: tunnel
+#        type: cloudify.relationships.connected_to
 
   filter:
     type: cloudify.nodes.ApplicationModule
     interfaces:
       cloudify.interfaces.lifecycle:
         start:
-          implementation: scripts/filter_start.sh
+          implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
+            script_path: scripts/filter_start.sh
+            use_sudo: true
+            fabric_env:
+              host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
+              user: { get_input: agent_user }
+              key_filename: { get_input: openstack_key_file }
             filter_keyword: { get_input: filter_keyword }
         stop:
-          implementation: scripts/filter_stop.sh
+          implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
+            script_path: scripts/filter_stop.sh
+            use_sudo: true
+            fabric_env:
+              host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
+              user: { get_input: agent_user }
+              key_filename: { get_input: openstack_key_file }
             filter_keyword: { get_input: filter_keyword }
-
     relationships:
       - target: generic_vnf
         type: cloudify.relationships.contained_in
+      - target: openstack_controller
+        type: cloudify.relationships.connected_to
 
 
 
@@ -228,13 +244,18 @@ node_templates:
     interfaces:
       cloudify.interfaces.lifecycle:
         start:
-          implementation: scripts/router_start.sh
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path: scripts/router_start.sh
+            use_sudo: true
+            fabric_env:
+              host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
+              user: { get_input: agent_user }
+              key_filename: { get_input: openstack_key_file }
     relationships:
       - target: generic_vnf
         type: cloudify.relationships.contained_in
       - target: vpn
         type: cloudify.relationships.connected_to
-
-
-
-
+      - target: openstack_controller
+        type: cloudify.relationships.connected_to
