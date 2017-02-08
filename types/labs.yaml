@@ -9,6 +9,8 @@ node_types:
           inputs:
             script_path:
               default: scripts/tunnel_create.sh
+            use_sudo:
+              default: true
             fabric_env:
               default:
                 host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }

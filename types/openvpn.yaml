@@ -4,11 +4,13 @@ node_types:
     derived_from: cloudify.nodes.ApplicationModule
     interfaces:
       cloudify.interfaces.lifecycle:
-        start:
+        create:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
             script_path:
               default: scripts/vpn_create.sh
+            use_sudo:
+              default: true
             fabric_env:
               default:
                 host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
@@ -19,6 +21,8 @@ node_types:
           inputs:
             script_path:
               default: scripts/vpn_configure.sh
+            use_sudo:
+              default: true
             fabric_env:
               default:
                 host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }

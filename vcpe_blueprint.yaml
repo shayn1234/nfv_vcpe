@@ -225,6 +225,7 @@ node_templates:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
             script_path: scripts/filter_stop.sh
+            use_sudo: true
             fabric_env:
               host_string: { get_attribute: [ vpn_floating_ip, floating_ip_address ] }
               user: { get_input: agent_user }
