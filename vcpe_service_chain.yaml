@@ -7,16 +7,69 @@ imports:
   - http://www.getcloudify.org/spec/fabric-plugin/1.4.2/plugin.yaml
   - https://raw.githubusercontent.com/cloudify-examples/cloudify-proxy-plugin/master/plugin.yaml
 #####
-  application_blueprint_id:
-      default: vcpe
+  vpn_utm_blueprint_id:
+      default: VPN-UTM
       type: string
-      description: Application blueprint ID
+      description: VPN-UTM blueprint ID
 
+  k8s_blueprint_id:
+        default: K8S
+        type: string
+        description: K8S blueprint ID
+
+  quagga_blueprint_id:
+          default: QUAGGA
+          type: string
+          description: QUAGGA blueprint ID
 
 node_templates:
 
-# Chain APP blueprint
-  app_deployment:
+  k8s_deployment:
+        type: cloudify.nodes.BlueprintDeployment
+        properties:
+           blueprint_id: { get_input: k8s_blueprint_id }
+
+  quagga_deployment:
       type: cloudify.nodes.BlueprintDeployment
       properties:
-        blueprint_id: { get_input: application_blueprint_id }
+         blueprint_id: { get_input: quagga_blueprint_id }
+         relationships:
+            - target: k8s_deployment
+              type: cloudify.relationships.connected_to
+
+  quagga_proxy_deployment:
+      type: cloudify.nodes.DeploymentProxy
+      properties:
+         inherit_outputs:
+                 - 'quagga_ip'
+          interfaces:
+            cloudify.interfaces.lifecycle:
+              create:
+                inputs:
+                  deployment_id: { get_attribute: [ quagga_deployment, deployment_id ]}
+              start:
+                inputs:
+                  deployment_id: { get_attribute: [ quagga_deployment, deployment_id ]}
+              stop:
+                inputs:
+                  deployment_id: { get_attribute: [ quagga_deployment, deployment_id ]}
+          relationships:
+            - target: quagga_deployment
+              type: cloudify.relationships.connected_to
+
+
+# Chain APP blueprint
+  vpn_utm_deployment:
+      type: cloudify.nodes.BlueprintDeployment
+      properties:
+        blueprint_id: { get_input: vpn_utm_blueprint_id }
+      interfaces:
+         cloudify.interfaces.lifecycle:
+            create:
+               inputs:
+                  deployment_inputs:
+                      quagga_ip: { get_attribute: [ quagga_proxy_deployment, quagga_ip ]}
+      relationships:
+         - target: quagga_deployment
+           type: cloudify.relationships.connected_to
+
